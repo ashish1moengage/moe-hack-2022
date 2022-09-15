@@ -36,6 +36,7 @@ const myNewTheme = {
 };
 
 function Sentrytable(props) {
+  console.log(props.refresh)
   const navigate = useNavigate();
   const [search, setSearch] = useState("");
   const [filterSentry, setFilterSentry] = useState([]);
@@ -74,7 +75,9 @@ function Sentrytable(props) {
 
   useEffect(() => {
     fetchServices(props.db)
-  }, [props.db]);
+  }, [props.db, props.refresh]);
+
+
 
   useEffect(() => {
     const result = services.filter((sentry) => {

@@ -15,13 +15,16 @@ function App() {
   const [dbDetails, setDbDetails] = useState([]);
   const [services, setServices] = useState([]);
   const [user, setUser] = useState(null);
+  const [newFlagName, setNewFlagName] = useState(null);
+  const [newFlagValue, setNewFlagValue] = useState(null);
+  const [refresh, setRefresh] = useState(true);
 
   useEffect(() => {
     setUser(JSON.parse(localStorage.getItem("user")));
     searchByName();
   }, []);
 
-  const searchByName = (value="") => {
+  const searchByName = (value = "") => {
     var data = JSON.stringify({
       filter: value,
       page: "1",
@@ -49,24 +52,128 @@ function App() {
       });
   };
 
-  const fetchServices = (db) => {
+  const enableSentry = () => {
+    // document.getElementById(row.service_name).click();
+
+    var data = JSON.stringify({
+      status: newFlagValue,
+      service: newFlagName,
+    });
+
     var config = {
-      method: "get",
-      url: "http://10.66.67.125:32502/v3/campaigns/inapp/sentry_services/" + db,
-      headers: {},
+      method: "post",
+      url:
+        "http://10.66.67.125:32502/v3/campaigns/inapp/sentry_services/" +
+        dbName,
+      headers: {
+        "Content-Type": "application/json",
+      },
+      data: data,
     };
 
     axios(config)
       .then(function (response) {
-        setServices(response.data.data);
+        const resp = response.data;
+        if (resp.code === "200") {
+          toast.success("Success!", {
+            position: "bottom-right",
+            autoClose: 5000,
+            hideProgressBar: false,
+            closeOnClick: true,
+            pauseOnHover: true,
+            draggable: true,
+            progress: undefined,
+            toastId: "success1",
+          });
+        }
       })
       .catch(function (error) {
         console.log(error);
       });
   };
 
+  const handleSubmit = (e) => {
+      e.preventDefault();
+      if (newFlagValue) {
+        enableSentry();
+        document.getElementById("sentryFlagCloseBtn").click();
+        setNewFlagName(null);
+        setNewFlagValue(null);
+        setRefresh(!refresh);
+      }
+      else {
+        alert("Sentry Flag value enter karo")
+      }
+      
+
+  }
+
   return (
     <div className="App">
+      <div
+        class="modal fade"
+        id="exampleModal"
+        tabindex="-1"
+        aria-labelledby="exampleModalLabel"
+        aria-hidden="true"
+      >
+        <div class="modal-dialog">
+          <div class="modal-content">
+            <div class="modal-header">
+              <h5 class="modal-title" id="exampleModalLabel">
+                Sentry Detail
+              </h5>
+              <button
+                type="button"
+                class="btn-close"
+                data-bs-dismiss="modal"
+                aria-label="Close"
+              ></button>
+            </div>
+            <form onSubmit={handleSubmit}>
+            <div class="modal-body">
+              <div class="col-md-10 mb-3">
+                <label for="inputSentry" class="form-label">
+                  Sentry Flag Name
+                </label>
+                <input
+                  type="text"
+                  class="form-control"
+                  id="inputSentry"
+                  onChange={(e) => setNewFlagName(e.target.value)}
+                  required
+                ></input>
+              </div>
+
+              <div class="col-md-10 mb-3">
+                <label for="inputSentryValue" class="form-label">
+                  Sentry Flag Value
+                </label>
+                <select id="inputSentryValue" class="form-select" onChange={(e) => setNewFlagValue(e.target.value)}>
+                  <option selected>Choose...</option>
+                  <option value={"ALLOWED"}>ALLOWED</option>
+                  <option value={"BLOCKED"}>BLOCKED</option>
+                </select>
+              </div>
+            </div>
+            <div class="modal-footer">
+              <button
+                type="button"
+                class="btn btn-secondary"
+                data-bs-dismiss="modal"
+                id="sentryFlagCloseBtn"
+              >
+                Close
+              </button>
+              <button class="btn btn-primary" type="submit">
+                Add Sentry
+              </button>
+            </div>
+            </form>
+            
+          </div>
+        </div>
+      </div>
       <ToastContainer
         position="bottom-right"
         autoClose={5000}
@@ -88,7 +195,7 @@ function App() {
             element={
               <div class="row ms-2">
                 <div className="col-md-8 card p-3 shadow me-5">
-                  <Sentrytable db={dbName} />
+                  <Sentrytable db={dbName} refresh={refresh} />
                 </div>
 
                 <div
@@ -103,10 +210,15 @@ function App() {
                   />
 
                   <div className="row">
-                    <button className="btn btn-primary w-50 m-2 mt-4">
+                    <button type="button" data-bs-toggle="modal"
+                      data-bs-target="#exampleModal" id="sentryModalBtn" style={{"display" : "none"}}></button>
+                    
                       {" "}
-                      Add Sentry Flag
-                    </button>
+                     {(user && ["dev", "admin"].includes(user.role)) ? <><button
+                      className="btn btn-primary w-50 m-auto mt-4"
+                      type="button"
+                      onClick={() => {dbName ? document.getElementById("sentryModalBtn").click() : alert("Please select a DB")}}
+                    ><i class="fa-solid fa-plus"></i> Add Sentry Flag</button></> : ''}
                   </div>
                 </div>
               </div>

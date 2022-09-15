@@ -42,6 +42,7 @@ function Navbar(props) {
                   <ul
                     class="dropdown-menu me-5"
                     aria-labelledby="navbarDropdown"
+                    style={{"fontSize" : "20px"}}
                   >
                     <li>
                       <a class="dropdown-item" href="#">
