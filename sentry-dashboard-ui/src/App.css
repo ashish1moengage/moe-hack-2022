@@ -1,0 +1,20 @@
+body {
+  font-size: 20px;
+}
+
+.main{
+  margin: 20px;
+}
+
+.rdt_TableBody .rdt_TableRow{
+  font-size: 20px;
+}
+
+.rdt_Table .rdt_TableHead{
+  font-size: 20px;
+  font-weight: bold;
+}
+
+.nav-brand{
+  font-family: 'Roboto', sans-serif;
+}
