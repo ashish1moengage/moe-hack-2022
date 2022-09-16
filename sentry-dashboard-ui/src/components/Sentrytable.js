@@ -3,23 +3,9 @@ import React, { useEffect, useState } from "react";
 import DataTable from "react-data-table-component";
 import Togglebtn from "./Togglebtn";
 import { useNavigate } from "react-router-dom";
-import { ToastContainer, toast } from 'react-toastify';
-import 'react-toastify/dist/ReactToastify.css';
+import { ToastContainer, toast } from "react-toastify";
+import "react-toastify/dist/ReactToastify.css";
 
-const columns = [
-  {
-    name: "Sentry Flags",
-    selector: (row) => <p style={{"fontFamily" : "Raleway", "fontWeight" : "bold"}}>{row.service_name}</p>,
-    width: "600px" ,
-    sortable: true,
-  },
-  {
-    name: "Status",
-    selector: (row) => (
-      <Togglebtn row={row} />
-    ),
-  }
-];
 // {
 //   "service_name": "ACTIONABLE_ANALYTICS",
 //   "app_key": "MOUOES8NXBLMZ6744ZJEHY4T",
@@ -28,7 +14,6 @@ const columns = [
 //   "last_disable_time": "2020-11-26T10:50:20.632000"
 // },
 
-
 const myNewTheme = {
   rows: {
     fontSize: "25px",
@@ -36,69 +21,83 @@ const myNewTheme = {
 };
 
 function Sentrytable(props) {
-  console.log(props.refresh)
+  console.log(props.refresh);
   const navigate = useNavigate();
   const [search, setSearch] = useState("");
   const [filterSentry, setFilterSentry] = useState([]);
   const [services, setServices] = useState([]);
+  const { dbDetails, active } = props;
 
   const [user, setUser] = useState(null);
 
+  const columns = [
+    {
+      name: "Sentry Flags",
+      selector: (row) => (
+        <p style={{ fontFamily: "Raleway", fontWeight: "bold" }}>
+          {row.service_name}
+        </p>
+      ),
+      width: "600px",
+      sortable: true,
+    },
+    {
+      name: "Status",
+      selector: (row) => <Togglebtn active={active} row={row} />,
+    },
+  ];
+
   useEffect(() => {
-      if (!localStorage.getItem("user")) {
-          navigate("/login")
-      }
-      else {
-          setUser(JSON.parse(localStorage.getItem("user")))
-      }
-  }, [])
+    if (!localStorage.getItem("user")) {
+      navigate("/login");
+    } else {
+      setUser(JSON.parse(localStorage.getItem("user")));
+    }
+  }, []);
 
   const fetchServices = (db) => {
     if (db) {
       var config = {
-        method: 'get',
-        url: 'http://10.66.67.125:32502/v3/campaigns/inapp/sentry_services/' + db,
-        headers: { }
+        method: "get",
+        url:
+          "http://10.66.67.125:32502/v3/campaigns/inapp/sentry_services/" + db,
+        headers: {},
       };
-      
+
       axios(config)
-      .then(function (response) {
-            setServices(response.data.data);
-            setFilterSentry(response.data.data);
-            
-      })
-      .catch(function (error) {
-        console.log(error);
-      });
+        .then(function (response) {
+          setServices(response.data.data);
+          setFilterSentry(response.data.data);
+        })
+        .catch(function (error) {
+          console.log(error);
+        });
     }
-}
+  };
 
   useEffect(() => {
-    fetchServices(props.db)
+    fetchServices(props.db);
   }, [props.db, props.refresh]);
-
-
 
   useEffect(() => {
     const result = services.filter((sentry) => {
       return sentry.service_name.toLowerCase().match(search.toLowerCase());
     });
-    setFilterSentry(result)
-
+    setFilterSentry(result);
   }, [search]);
 
   const paginationComponentOptions = {
-    rowsPerPageText: 'per page',
-    rangeSeparatorText: 'of',
+    rowsPerPageText: "per page",
+    rangeSeparatorText: "of",
     selectAllRowsItem: true,
-    selectAllRowsItemText: 'Todos',
+    selectAllRowsItemText: "Todos",
     noRowsPerPage: false,
-};
+  };
 
   return (
     <div>
       <DataTable
-      title="Sentry Flags"
+        title="Sentry Flags"
         columns={columns}
         data={filterSentry}
         customTheme={myNewTheme}

@@ -9,7 +9,11 @@ function Navbar(props) {
       style={{ backgroundColor: "#0a2377" }}
     >
       <div class="container-fluid">
-        <a class="navbar-brand" href="https://www.moengage.com/" style={{ fontFamily: "Roboto" }}>
+        <a
+          class="navbar-brand"
+          href="https://www.moengage.com/"
+          style={{ fontFamily: "Roboto" }}
+        >
           <img src={logo} width={200}></img>
         </a>
         <button
@@ -27,7 +31,7 @@ function Navbar(props) {
           <ul class="navbar-nav me-auto mb-2 mb-lg-0"></ul>
           {props.user ? (
             <div class="d-flex" style={{ marginRight: "200px" }}>
-              <ul class="navbar-nav"  style={{"fontSize" : "25px"}}>
+              <ul class="navbar-nav" style={{ fontSize: "25px" }}>
                 <li class="nav-item dropdown">
                   <a
                     class="nav-link dropdown-toggle"
@@ -42,7 +46,7 @@ function Navbar(props) {
                   <ul
                     class="dropdown-menu me-5"
                     aria-labelledby="navbarDropdown"
-                    style={{"fontSize" : "20px"}}
+                    style={{ fontSize: "20px" }}
                   >
                     <li>
                       <a class="dropdown-item" href="#">
@@ -53,7 +57,15 @@ function Navbar(props) {
                       <hr class="dropdown-divider"></hr>
                     </li>
                     <li>
-                      <a class="dropdown-item" href="#" onClick={() => {localStorage.removeItem("user"); window.location.reload()}}>
+                      <a
+                        class="dropdown-item"
+                        href="#"
+                        onClick={() => {
+                          localStorage.removeItem("user");
+                          localStorage.removeItem("db");
+                          window.location.reload();
+                        }}
+                      >
                         Logout
                       </a>
                     </li>

@@ -2,10 +2,23 @@ import React, { useEffect, useState } from "react";
 import axios from "axios";
 import { ToastContainer, toast } from "react-toastify";
 import "react-toastify/dist/ReactToastify.css";
+import { useNavigate } from "react-router-dom";
 
 function Togglebtn(props) {
-  const { row } = props;
+  const navigate = useNavigate();
+  const { row, active } = props;
+  console.log("hello", active);
   const [enable, setEnable] = useState(false);
+
+  const [user, setUser] = useState(null);
+
+  useEffect(() => {
+    if (!localStorage.getItem("user")) {
+      navigate("/login");
+    } else {
+      setUser(JSON.parse(localStorage.getItem("user")));
+    }
+  }, []);
 
   const enableSentry = () => {
     // document.getElementById(row.service_name).click();
@@ -137,6 +150,9 @@ function Togglebtn(props) {
           id="flexSwitchCheckChecked"
           checked={enable}
           onChange={enableSentry}
+          disabled={
+            user && ["dev", "csm"].includes(user.role) && active ? false : true
+          }
         />
         <label class="form-check-label" for="flexSwitchCheckChecked">
           {enable ? (

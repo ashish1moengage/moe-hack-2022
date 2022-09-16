@@ -18,10 +18,18 @@ function App() {
   const [newFlagName, setNewFlagName] = useState(null);
   const [newFlagValue, setNewFlagValue] = useState(null);
   const [refresh, setRefresh] = useState(true);
+  const [enabledApp, setEnabledApp] = useState(null);
+  console.log(dbName);
 
   useEffect(() => {
     setUser(JSON.parse(localStorage.getItem("user")));
     searchByName();
+
+    if (localStorage.getItem("db")) {
+      const x = JSON.parse(localStorage.getItem("db"));
+      setDbName(x.label);
+      setEnabledApp(x.status === "ALLOWED" ? true : false);
+    }
   }, []);
 
   const searchByName = (value = "") => {
@@ -43,9 +51,53 @@ function App() {
       .then(function (response) {
         let resp_data = [];
         response.data.data.map((item) => {
-          resp_data.push({ label: item.db_name, value: item._id });
+          resp_data.push({
+            label: item.db_name,
+            value: item._id,
+            status: item.status,
+          });
         });
         setDbDetails(resp_data);
+      })
+      .catch(function (error) {
+        console.log(error);
+      });
+  };
+
+  const enableApp = () => {
+    var data = JSON.stringify({
+      status: enabledApp ? "BLOCKED" : "ALLOWED",
+      db_name: dbName,
+    });
+
+    var config = {
+      method: "post",
+      url: "http://10.66.67.125:32502/v3/campaigns/inapp/sentry_apps",
+      headers: {
+        "Content-Type": "application/json",
+      },
+      data: data,
+    };
+
+    axios(config)
+      .then(function (response) {
+        console.log(JSON.stringify(response.data));
+        toast.success("Success!", {
+          position: "bottom-right",
+          autoClose: 5000,
+          hideProgressBar: false,
+          closeOnClick: true,
+          pauseOnHover: true,
+          draggable: true,
+          progress: undefined,
+          toastId: "success1",
+        });
+
+        setEnabledApp(!enabledApp);
+        const x = JSON.parse(localStorage.getItem("db"));
+        x.status = enabledApp ? "BLOCKED" : "ALLOWED";
+        localStorage.setItem("db", JSON.stringify(x));
+        window.location.reload();
       })
       .catch(function (error) {
         console.log(error);
@@ -85,6 +137,11 @@ function App() {
             progress: undefined,
             toastId: "success1",
           });
+          document.getElementById("sentryFlagCloseBtn").click();
+          setNewFlagName(null);
+          setNewFlagValue(null);
+          setRefresh(!refresh);
+          window.location.reload();
         }
       })
       .catch(function (error) {
@@ -93,20 +150,13 @@ function App() {
   };
 
   const handleSubmit = (e) => {
-      e.preventDefault();
-      if (newFlagValue) {
-        enableSentry();
-        document.getElementById("sentryFlagCloseBtn").click();
-        setNewFlagName(null);
-        setNewFlagValue(null);
-        setRefresh(!refresh);
-      }
-      else {
-        alert("Sentry Flag value enter karo")
-      }
-      
-
-  }
+    e.preventDefault();
+    if (newFlagValue) {
+      enableSentry();
+    } else {
+      alert("Sentry Flag value enter karo");
+    }
+  };
 
   return (
     <div className="App">
@@ -131,46 +181,50 @@ function App() {
               ></button>
             </div>
             <form onSubmit={handleSubmit}>
-            <div class="modal-body">
-              <div class="col-md-10 mb-3">
-                <label for="inputSentry" class="form-label">
-                  Sentry Flag Name
-                </label>
-                <input
-                  type="text"
-                  class="form-control"
-                  id="inputSentry"
-                  onChange={(e) => setNewFlagName(e.target.value)}
-                  required
-                ></input>
-              </div>
+              <div class="modal-body">
+                <div class="col-md-10 mb-3">
+                  <label for="inputSentry" class="form-label">
+                    Sentry Flag Name
+                  </label>
+                  <input
+                    type="text"
+                    class="form-control"
+                    id="inputSentry"
+                    onChange={(e) => setNewFlagName(e.target.value)}
+                    required
+                    autocomplete="off"
+                  ></input>
+                </div>
 
-              <div class="col-md-10 mb-3">
-                <label for="inputSentryValue" class="form-label">
-                  Sentry Flag Value
-                </label>
-                <select id="inputSentryValue" class="form-select" onChange={(e) => setNewFlagValue(e.target.value)}>
-                  <option selected>Choose...</option>
-                  <option value={"ALLOWED"}>ALLOWED</option>
-                  <option value={"BLOCKED"}>BLOCKED</option>
-                </select>
+                <div class="col-md-10 mb-3">
+                  <label for="inputSentryValue" class="form-label">
+                    Sentry Flag Value
+                  </label>
+                  <select
+                    id="inputSentryValue"
+                    class="form-select"
+                    onChange={(e) => setNewFlagValue(e.target.value)}
+                  >
+                    <option selected>Choose...</option>
+                    <option value={"ALLOWED"}>ALLOWED</option>
+                    <option value={"BLOCKED"}>BLOCKED</option>
+                  </select>
+                </div>
               </div>
-            </div>
-            <div class="modal-footer">
-              <button
-                type="button"
-                class="btn btn-secondary"
-                data-bs-dismiss="modal"
-                id="sentryFlagCloseBtn"
-              >
-                Close
-              </button>
-              <button class="btn btn-primary" type="submit">
-                Add Sentry
-              </button>
-            </div>
+              <div class="modal-footer">
+                <button
+                  type="button"
+                  class="btn btn-secondary"
+                  data-bs-dismiss="modal"
+                  id="sentryFlagCloseBtn"
+                >
+                  Close
+                </button>
+                <button class="btn btn-primary" type="submit">
+                  Add Sentry
+                </button>
+              </div>
             </form>
-            
           </div>
         </div>
       </div>
@@ -195,7 +249,12 @@ function App() {
             element={
               <div class="row ms-2">
                 <div className="col-md-8 card p-3 shadow me-5">
-                  <Sentrytable db={dbName} refresh={refresh} />
+                  <Sentrytable
+                    db={dbName}
+                    refresh={refresh}
+                    dbDetails={dbDetails}
+                    active={enabledApp}
+                  />
                 </div>
 
                 <div
@@ -206,19 +265,78 @@ function App() {
                   <Select
                     options={dbDetails}
                     onKeyDown={(e) => searchByName(e.target.value)}
-                    onChange={(e) => setDbName(e.label)}
+                    onChange={(e) => {
+                      setDbName(e.label);
+                      setEnabledApp(e.status === "BLOCKED" ? false : true);
+                      localStorage.setItem("db", JSON.stringify(e));
+                    }}
+                    value={JSON.parse(localStorage.getItem("db"))}
                   />
 
                   <div className="row">
-                    <button type="button" data-bs-toggle="modal"
-                      data-bs-target="#exampleModal" id="sentryModalBtn" style={{"display" : "none"}}></button>
-                    
-                      {" "}
-                     {(user && ["dev", "admin"].includes(user.role)) ? <><button
-                      className="btn btn-primary w-50 m-auto mt-4"
+                    <button
                       type="button"
-                      onClick={() => {dbName ? document.getElementById("sentryModalBtn").click() : alert("Please select a DB")}}
-                    ><i class="fa-solid fa-plus"></i> Add Sentry Flag</button></> : ''}
+                      data-bs-toggle="modal"
+                      data-bs-target="#exampleModal"
+                      id="sentryModalBtn"
+                      style={{ display: "none" }}
+                      disabled={enabledApp ? false : true}
+                    ></button>{" "}
+                    {user && ["dev"].includes(user.role) ? (
+                      <>
+                        <button
+                          className="btn btn-primary w-50 m-auto mt-4"
+                          type="button"
+                          onClick={() => {
+                            dbName
+                              ? document
+                                  .getElementById("sentryModalBtn")
+                                  .click()
+                              : alert("Please select a DB");
+                          }}
+                        >
+                          <i class="fa-solid fa-plus"></i> Add Sentry Flag
+                        </button>
+                      </>
+                    ) : (
+                      ""
+                    )}
+                    {dbName ? (
+                      <>
+                        <div class="form-check form-switch ms-5 mt-4">
+                          {/* <button type="button" class="btn btn-primary" id="liveToastBtn">Show live toast</button> */}
+                          <h4 className="ms-5">App Status:</h4>
+                          <input
+                            class="form-check-input ms-5"
+                            type="checkbox"
+                            id="flexSwitchCheckChecked1233"
+                            checked={enabledApp}
+                            onChange={enableApp}
+                            disabled={
+                              user && ["dev", "admin"].includes(user.role)
+                                ? false
+                                : true
+                            }
+                          />
+                          <label
+                            class="form-check-label"
+                            for="flexSwitchCheckChecked"
+                          >
+                            {enabledApp ? (
+                              <p className="ms-2" style={{ color: "green" }}>
+                                Enabled
+                              </p>
+                            ) : (
+                              <p className="ms-2" style={{ color: "red" }}>
+                                Disabled
+                              </p>
+                            )}
+                          </label>
+                        </div>
+                      </>
+                    ) : (
+                      <></>
+                    )}
                   </div>
                 </div>
               </div>
